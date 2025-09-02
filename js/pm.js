@@ -1,5 +1,11 @@
-// PM page logic
+// PM page logic (enhanced: drain notices, timeline filters/badges)
 let pmFiltered=[], pmTab='mine', pmCurrent=null;
+
+// small wrapper for timeline rendering (new opts vs old boolean signature)
+function _renderTL(el, proj, opts){
+  try { return DTRC.renderTimeline(el, proj, opts); }
+  catch(e){ return DTRC.renderTimeline(el, proj, !!(opts?.forPM)); }
+}
 
 function applyPMFilters(){
   const me=DTRC.getUser(); const projects=DTRC.loadProjects();
@@ -18,6 +24,18 @@ function actorLabelForPM(p){ if(p.nextActor==='pm') return 'You'; if(p.nextActor
 function rowClassPM(p){ if(p.nextActor==='pm'&&DTRC.isOverdue(p)) return 'table-danger row-own'; if(p.nextActor==='pm') return 'table-warning row-own'; return ''; }
 
 function renderPM(){
+  // Drain notifications once per page load
+  if (!window.__dtrcNotesDrained) {
+    try {
+      const me = DTRC.getUser();
+      if (me?.email && typeof DTRC.drainNotices === 'function') {
+        const notes = DTRC.drainNotices(me.email);
+        notes.forEach(n => (DTRC.notify ? DTRC.notify(n.text) : alert(n.text)));
+      }
+    } catch(e) { /* no-op */ }
+    window.__dtrcNotesDrained = true;
+  }
+
   DTRC.updateActionBadges(); applyPMFilters();
   const tbody=DTRC.$('#pmRows'); if(!tbody) return; tbody.innerHTML='';
   pmFiltered.forEach(p=>{
@@ -62,7 +80,28 @@ function openPMView(id){
   const types=`${p.mainType||'-'}; Other: ${(p.otherTypes||[]).join(', ')||'-'} ${p.sharedServices?.length? ' | EGNC SS: '+p.sharedServices.join(', '):''}`;
   DTRC.$('#pmViewTypes').textContent=types;
   DTRC.$('#pmViewFiles').innerHTML=DTRC.listFiles(p.attachments);
-  DTRC.renderTimeline(DTRC.$('#pmViewTimeline'), p, true);
+
+  // Inject controls once (PM cannot see internal; checkbox disabled)
+  if (!document.getElementById('pmViewTLControls')) {
+    const h6 = document.querySelector('#pmViewTimeline')?.previousElementSibling;
+    const div = document.createElement('div');
+    div.id = 'pmViewTLControls';
+    div.className = 'd-flex align-items-center gap-2 mb-2';
+    div.innerHTML = `
+      <select id="pmViewTLActor" class="form-select form-select-sm" style="max-width:180px">
+        <option value="all">All actors</option>
+        <option value="user">User only</option>
+        <option value="sec">Secretariat only</option>
+      </select>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="checkbox" id="pmViewTLShowInternal" disabled>
+        <label class="form-check-label" for="pmViewTLShowInternal" title="Secretariat-only">Show internal</label>
+      </div>`;
+    h6?.after(div);
+    document.getElementById('pmViewTLActor').onchange = () => _renderTL(document.getElementById('pmViewTimeline'), p, { forPM:true, actor: document.getElementById('pmViewTLActor').value, includeInternal:false });
+  }
+  _renderTL(document.getElementById('pmViewTimeline'), p, { forPM:true, actor: document.getElementById('pmViewTLActor')?.value || 'all', includeInternal:false });
+
   const btnRU = DTRC.$('#pmMarkRU'); if(btnRU) btnRU.onclick=()=>{ DTRC.toggleUnread(p.id,'pm',true); openPMView(p.id); };
   pmViewModal().show(); renderPM();
 }
@@ -94,7 +133,30 @@ function openPMEdit(id){
     DTRC.$('#pmNARemarksRO').innerHTML= lastSec? DTRC.quoteHtml(lastSec.quote||DTRC.safePlain(lastSec.text||'')) :'—';
     const parts=DTRC.latestAndArchive(pmCurrent.attachments||[]); DTRC.$('#pmNALatest').innerHTML=parts.latest? DTRC.listFiles([parts.latest]):'<li class="text-muted">None</li>'; DTRC.$('#pmNAArchive').innerHTML=parts.archive.length? DTRC.listFiles(parts.archive):'<li class="text-muted">None</li>'; DTRC.$('#pmNAUpload').value=''; DTRC.$('#pmNAReply').innerHTML='';
   }
-  DTRC.renderTimeline(DTRC.$('#pmTimeline'), pmCurrent, true);
+
+  // Inject timeline filter controls (PM cannot see internal)
+  if (!document.getElementById('pmEditTLControls')) {
+    const h6 = document.querySelector('#pmTimeline')?.previousElementSibling;
+    const div = document.createElement('div');
+    div.id = 'pmEditTLControls';
+    div.className = 'd-flex align-items-center gap-2 mb-2';
+    div.innerHTML = `
+      <select id="pmEditTLActor" class="form-select form-select-sm" style="max-width:180px">
+        <option value="all">All actors</option>
+        <option value="user">User only</option>
+        <option value="sec">Secretariat only</option>
+      </select>
+      <div class="form-check form-check-inline">
+        <input class="form-check-input" type="checkbox" id="pmEditTLShowInternal" disabled>
+        <label class="form-check-label" for="pmEditTLShowInternal" title="Secretariat-only">Show internal</label>
+      </div>`;
+    h6?.after(div);
+    document.getElementById('pmEditTLActor').onchange = () => {
+      _renderTL(document.getElementById('pmTimeline'), pmCurrent, { forPM:true, actor: document.getElementById('pmEditTLActor').value, includeInternal:false });
+    };
+  }
+  _renderTL(document.getElementById('pmTimeline'), pmCurrent, { forPM:true, actor: document.getElementById('pmEditTLActor')?.value || 'all', includeInternal:false });
+
   const btnRU = DTRC.$('#pmEditMarkRU'); if(btnRU) btnRU.onclick=()=>{ DTRC.toggleUnread(pmCurrent.id,'pm',true); openPMEdit(pmCurrent.id); };
   pmEditModal().show(); renderPM();
 }
