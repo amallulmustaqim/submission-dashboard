@@ -21,5 +21,5 @@ This is a split, multi-page version suitable for GitHub Pages (static hosting).
 - Bootstrap 5 via CDN.
 - Navigation is page-based. Each page checks auth; unauthorized users are redirected to `index.html`.
 - Secretariat access is controlled by `localStorage` roles:
-  - Seeded Admin: `amallul.latif@egnc.gov.bn` (role `edit`)
+  - Seeded Admin: `my email` (role `edit`)
   - Add/remove roles from the Secretariat page (Admin only).
