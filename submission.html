@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>DTRC — Submission</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="css/styles.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<!-- Toast -->
+<div class="position-fixed bottom-0 end-0 p-3" style="z-index:1080">
+  <div id="toast" class="toast align-items-center text-bg-dark border-0" role="alert" aria-live="assertive" aria-atomic="true">
+    <div class="d-flex">
+      <div class="toast-body" id="toastBody">Saved.</div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+    </div>
+  </div>
+</div>
+
+<!-- Topbar -->
+<nav id="topbar" class="navbar navbar-expand-lg bg-white border-bottom">
+  <div class="container">
+    <a class="navbar-brand fw-semibold" href="pm.html">DTRC Prototype</a>
+    <button class="navbar-toggler" data-bs-toggle="collapse" data-bs-target="#navBar">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div id="navBar" class="collapse navbar-collapse">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="topNav">
+        <li class="nav-item"><a class="nav-link" href="pm.html">PM Dashboard <span class="badge rounded-pill text-bg-primary" id="pmMyCount" style="display:none;">0</span></a></li>
+        <li class="nav-item"><a class="nav-link" href="submission.html">Add New Submission</a></li>
+        <li class="nav-item"><a class="nav-link" id="secLink" href="secretariat.html">Secretariat <span class="badge rounded-pill text-bg-primary" id="secMyCount" style="display:none;">0</span></a></li>
+      </ul>
+      <div class="d-flex align-items-center gap-2">
+        <button class="btn btn-outline-danger btn-sm" id="clearStorageBtn" type="button">Clear Storage</button>
+        <span class="small text-muted" id="whoami">–</span>
+        <button class="btn btn-outline-secondary btn-sm" id="logoutBtn" type="button">Logout</button>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<div class="container py-4">
+
+  <!-- Submission -->
+  <section id="view-submission">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+      <h1 class="h4 mb-0">DTRC Submission Form</h1>
+      <div class="d-flex gap-2">
+        <span class="badge text-bg-secondary" id="saveState">Not saved</span>
+        <button class="btn btn-outline-secondary btn-sm" id="loadSample">Load Sample</button>
+        <button class="btn btn-outline-secondary btn-sm" id="importBtn">Import JSON</button>
+        <button class="btn btn-outline-secondary btn-sm" id="exportBtn">Export JSON</button>
+        <button class="btn btn-primary btn-sm" id="submitBtn">Submit</button>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-lg-4">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h6 class="text-uppercase text-muted">Form Type</h6>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="formType" id="ftArf" value="ARF" checked>
+              <label class="form-check-label" for="ftArf">ARF</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" name="formType" id="ftEpp" value="EPP" disabled>
+              <label class="form-check-label" for="ftEpp">EPP (coming soon)</label>
+            </div>
+
+            <hr>
+            <h6 class="text-uppercase text-muted">Main Activity Type</h6>
+            <select class="form-select" id="mainType"></select>
+
+            <div class="mt-3">
+              <h6 class="text-uppercase text-muted mb-2">Other Activity Types</h6>
+              <div id="otherTypes" class="d-grid gap-2"></div>
+              <div class="form-text">The main type is excluded automatically.</div>
+            </div>
+
+            <div class="mt-3 d-none" id="sharedServicesBlock">
+              <h6 class="text-uppercase text-muted mb-2">EGNC Shared Services</h6>
+              <div id="sharedServices" class="d-grid gap-2"></div>
+              <div class="form-text">Shows only when “Utilization of EGNC Shared Services” is selected.</div>
+            </div>
+
+            <hr>
+            <h6 class="text-uppercase text-muted mb-2">Upload Document</h6>
+            <input class="form-control" type="file" id="docUpload" accept=".pdf,.doc,.docx" multiple>
+            <ul class="small mt-2" id="docList"></ul>
+            <div class="form-text">Accepted: .doc, .docx, .pdf</div>
+
+            <hr>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="declared">
+              <label class="form-check-label" for="declared">
+                I confirm all information is ready for DTRC review.
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-8">
+        <div class="card shadow-sm mb-3">
+          <div class="card-body">
+            <h6 class="text-uppercase text-muted mb-3">Project Details</h6>
+            <div class="row g-3">
+              <div class="col-md-8">
+                <label class="form-label">Activity Name <span class="text-danger">*</span></label>
+                <input class="form-control" id="activityName" placeholder="e.g., GovBN Core Portal">
+                <div class="invalid-feedback">Required</div>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Ministry <span class="text-danger">*</span></label>
+                <select class="form-select" id="ministry">
+                  <option value="">Select…</option>
+                  <option>MTIC (Transport & Infocommunications)</option>
+                  <option>MOFE (Finance & Economy)</option>
+                  <option>MOE (Education)</option>
+                  <option>MOH (Health)</option>
+                  <option>PMO (Prime Minister’s Office)</option>
+                  <option>MOS (Religious Affairs)</option>
+                  <option>MOD (Defence)</option>
+                  <option>MEA (Energy)</option>
+                  <option>ME (Environment)</option>
+                </select>
+                <div class="invalid-feedback">Required</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Department <span class="text-danger">*</span></label>
+                <input class="form-control" id="department" placeholder="e.g., EGNC">
+                <div class="invalid-feedback">Required</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card shadow-sm mb-3">
+          <div class="card-body">
+            <h6 class="text-uppercase text-muted mb-3">People (AD Connected)</h6>
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label">PM (Business Lead) — Email <span class="text-danger">*</span></label>
+                <div class="input-group">
+                  <input class="form-control" id="pmBizEmail" placeholder="name@egnc.gov.bn">
+                  <button class="btn btn-outline-secondary" id="pmBizResolve" type="button">Resolve AD</button>
+                </div>
+                <div class="form-text">Name: <strong id="pmBizName">–</strong></div>
+                <div class="invalid-feedback d-block" id="pmBizErr" style="display:none;">Email & AD name required.</div>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">PM (Technical Lead) — Email (optional)</label>
+                <div class="input-group">
+                  <input class="form-control" id="pmTechEmail" placeholder="name@egnc.gov.bn">
+                  <button class="btn btn-outline-secondary" id="pmTechResolve" type="button">Resolve AD</button>
+                </div>
+                <div class="form-text">Name: <strong id="pmTechName">–</strong></div>
+              </div>
+              <div class="col-12">
+                <label class="form-label">Project Members — Email</label>
+                <div class="input-group">
+                  <input class="form-control" id="memEmail" placeholder="name@egnc.gov.bn">
+                  <button class="btn btn-outline-secondary" id="memAdd" type="button">Add</button>
+                </div>
+                <div id="memPills" class="mt-2"></div>
+                <div class="form-text">Members can view the submission status.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h6 class="text-uppercase text-muted mb-3">Summary</h6>
+            <div class="row g-2">
+              <div class="col-md-3"><span class="form-text">Form Type</span><div id="sumFormType" class="fw-semibold">ARF</div></div>
+              <div class="col-md-3"><span class="form-text">Main Type</span><div id="sumMainType" class="fw-semibold">–</div></div>
+              <div class="col-md-6"><span class="form-text">Other Types</span><div id="sumOtherTypes" class="fw-semibold">–</div></div>
+              <div class="col-md-6"><span class="form-text">Documents</span><div id="sumDocs" class="fw-semibold">0</div></div>
+              <div class="col-md-6"><span class="form-text">First Submission</span><div id="sumFirstSubmitted" class="fw-semibold">–</div></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Generic Modal -->
+<div class="modal fade" id="modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header"><h5 class="modal-title" id="modalTitle">Modal</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button></div>
+      <div class="modal-body" id="modalBody"></div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/common.js"></script>
+<script src="js/submission.js"></script>
+</body>
+</html>
